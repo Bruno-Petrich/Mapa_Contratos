@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Contratos - Visão Geográfica</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
+    
+    <!-- Estilo Customizado -->
+    <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Barra superior (Glassmorphism) -->
+        <header class="topbar glass">
+            <div class="header-left">
+                <a href="../index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+                <div class="title-container">
+                    <h1 class="page-title">Mapa de Contratos</h1>
+                    <p class="page-subtitle">Distribuição e Detalhes dos Equipamentos Instalados</p>
+                </div>
+            </div>
+            
+            <div class="header-stats" id="headerStats">
+                <div class="stat-badge">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span id="locaisCount">--</span> locais
+                </div>
+                <div class="stat-badge highlight">
+                    <i class="fa-solid fa-server"></i>
+                    <span id="maquinasCount">--</span> máquinas
+                </div>
+            </div>
+        </header>
+
+        <!-- Filtros Dinâmicos -->
+        <div class="filters-bar glass">
+            <div class="filter-group">
+                <label for="filterWarranty"><i class="fa-solid fa-shield-halved"></i> Garantia:</label>
+                <select id="filterWarranty" class="glass-input">
+                    <option value="all">Todas as Máquinas</option>
+                    <option value="active">Na Garantia (Vigente)</option>
+                    <option value="expired">Fora da Garantia (Vencida)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fa-solid fa-box"></i> Modelos:</label>
+                <div class="multi-select-container">
+                    <button type="button" id="btnToggleModels" class="glass-input multi-select-button">
+                        <span id="modelsLabel">Todos os Modelos</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div id="modelsDropdown" class="multi-select-dropdown hidden glass">
+                        <!-- O Javascript vai injetar os checkboxes dos modelos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader" class="loader-container">
+            <div class="spinner"></div>
+            <p>Carregando dados dos contratos e geo-coordenadas...</p>
+        </div>
+
+        <!-- O Mapa e Paineis Auxiliares -->
+        <main class="map-wrapper">
+            <button id="btnBackBrasil" class="btn-back-brasil hidden"><i class="fa-solid fa-earth-americas"></i> Voltar para Visão Nacional</button>
+            <div id="map"></div>
+            
+            <!-- Painel Lateral de Detalhes da Cidade -->
+            <aside id="infoPanel" class="info-panel hidden glass">
+                <button id="btnClosePanel" class="btn-close-panel"><i class="fa-solid fa-xmark"></i></button>
+                <div id="infoPanelContent" class="info-panel-content">
+                    <!-- O conteúdo dinâmico do JS virá para cá -->
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Scripts do Leaflet e App -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="app.js?v=4"></script>
+</body>
+</html>
