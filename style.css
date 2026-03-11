@@ -293,6 +293,7 @@ body {
 .city-total-marker .city-count {
     font-size: 11px;
     font-weight: 700;
+    pointer-events: none; /* Let touches pass through the text to the parent marker */
 }
 
 
@@ -702,11 +703,12 @@ body {
     /* Back to National Button */
     .btn-back-brasil {
         top: auto;
-        bottom: 20px;
+        bottom: 60px; /* Increased from 20px to avoid iOS/Android system bars */
         left: 50%;
         transform: translateX(-50%);
         width: 90%;
         justify-content: center;
+        z-index: 10000; /* Ensure it stays above everything on bottom */
     }
     
     .btn-back-brasil:hover {
@@ -714,7 +716,7 @@ body {
     }
     
     .btn-back-brasil.hidden {
-        transform: translateX(-50%) translateY(100px);
+        transform: translateX(-50%) translateY(150px);
     }
 
     /* Info Panel to Bottom Sheet */

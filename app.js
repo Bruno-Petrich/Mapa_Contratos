@@ -457,8 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Construir o HTML consolidado da cidade a partir dos dados brutod filtrados
                         const popupContentHTML = generateCityPopupHTML(matchingData);
 
-                        // Amarrar o clique do Polígono para abrir o Painel Lateral
-                        layer.on('click', () => {
+                        // Amarrar o clique/toque do Polígono para abrir o Painel Lateral
+                        layer.on('click touchend', (e) => {
+                            L.DomEvent.preventDefault(e); // Previne ghost clicks em mobile
                             openCityPanel(popupContentHTML);
                         });
 
@@ -478,8 +479,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const cityMarker = L.marker(layerCenter, { icon: cityIcon }).addTo(cityMarkersLayer);
                         
-                        // Amarrar o clique do Número para abrir o Painel Lateral
-                        cityMarker.on('click', () => {
+                        // Amarrar o clique/toque do Número para abrir o Painel Lateral
+                        cityMarker.on('click touchend', (e) => {
+                            L.DomEvent.preventDefault(e);
                             openCityPanel(popupContentHTML);
                         });
 
