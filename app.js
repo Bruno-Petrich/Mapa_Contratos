@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Estado dos Filtros Globais
     let currentFilters = {
         warranty: 'all', // 'all', 'active', 'expired'
-        models: [] // array de strings
+        model: 'all'     // 'all' ou string do modelo especifico
     };
 
     const btnBackBrasil = document.getElementById('btnBackBrasil');
@@ -80,25 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
         infoPanel.classList.add('hidden');
     });
 
-    // Controladores do Multiselect
-    const btnToggleModels = document.getElementById('btnToggleModels');
-    const modelsDropdown = document.getElementById('modelsDropdown');
-    const modelsLabel = document.getElementById('modelsLabel');
+    // Elementos de Filtro
     const filterWarranty = document.getElementById('filterWarranty');
-
-    btnToggleModels.addEventListener('click', () => {
-        modelsDropdown.classList.toggle('hidden');
-    });
-
-    // Fechar dropdown de modelos ao clicar fora
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.multi-select-container')) {
-            modelsDropdown.classList.add('hidden');
-        }
-    });
+    const filterModels = document.getElementById('filterModels');
 
     filterWarranty.addEventListener('change', (e) => {
         currentFilters.warranty = e.target.value;
+        applyFilters();
+    });
+
+    filterModels.addEventListener('change', (e) => {
+        currentFilters.model = e.target.value;
         applyFilters();
     });
 
@@ -131,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rawData = await dataRes.json();
             const geojson = await geoRes.json();
 
-            // Extrair modelos únicos globais para montar os checkboxes
+            // Extrair modelos únicos globais para montar o select nativo
             const allModels = new Set();
             rawData.forEach(cityData => {
                 if(!cityData.equipamentos) return;
@@ -174,78 +166,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ----------------------------------------------------
-       Motor de Múltipla Escolha e Filtragem Pura
+       Motor de Filtros e UI
     ---------------------------------------------------- */
     function populateModelsDropdown(models) {
-        modelsDropdown.innerHTML = '';
-        currentFilters.models = [...models]; // Todos marcados inicialmente
+        filterModels.innerHTML = '<option value="all">Todos os Modelos</option>';
+        currentFilters.model = 'all';
 
-        // Adiciona Botões de Ação Rápida no Topo do Dropdown
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'dropdown-actions';
-        
-        const btnSelectAll = document.createElement('button');
-        btnSelectAll.type = 'button';
-        btnSelectAll.className = 'btn-filter-action';
-        btnSelectAll.innerHTML = '<i class="fa-solid fa-check-double"></i> Selecionar Todos';
-        
-        const btnClearAll = document.createElement('button');
-        btnClearAll.type = 'button';
-        btnClearAll.className = 'btn-filter-action';
-        btnClearAll.innerHTML = '<i class="fa-solid fa-eraser"></i> Limpar Todos';
-        
-        actionsDiv.appendChild(btnSelectAll);
-        actionsDiv.appendChild(btnClearAll);
-        modelsDropdown.appendChild(actionsDiv);
-
-        btnSelectAll.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evita fechar o menu se clicar aqui
-            currentFilters.models = [...models];
-            modelsDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
-            updateModelLabel(models.length);
-            applyFilters();
-        });
-
-        btnClearAll.addEventListener('click', (e) => {
-            e.stopPropagation();
-            currentFilters.models = [];
-            modelsDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            updateModelLabel(models.length);
-            applyFilters();
-        });
-
-        // Loop principal dos modelos
         models.forEach(mod => {
-            const div = document.createElement('div');
-            div.className = 'checkbox-item';
-            div.innerHTML = `
-                <input type="checkbox" id="mod_${mod}" value="${mod}" checked>
-                <label for="mod_${mod}">${mod}</label>
-            `;
-            modelsDropdown.appendChild(div);
-
-            const cb = div.querySelector('input');
-            cb.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    currentFilters.models.push(e.target.value);
-                } else {
-                    currentFilters.models = currentFilters.models.filter(m => m !== e.target.value);
-                }
-                updateModelLabel(models.length);
-                applyFilters();
-            });
+            const option = document.createElement('option');
+            option.value = mod;
+            option.textContent = mod;
+            filterModels.appendChild(option);
         });
-    }
-
-    function updateModelLabel(totalModelsCount) {
-        const count = currentFilters.models.length;
-        if (count === totalModelsCount) {
-            modelsLabel.textContent = "Todos os Modelos";
-        } else if (count === 0) {
-            modelsLabel.textContent = "Nenhum Selecionado";
-        } else {
-            modelsLabel.textContent = `${count} Modelo(s) Selecionado(s)`;
-        }
     }
 
     // Helper: Validar Garantia
@@ -265,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let locaisValidos = new Set();
 
         const wFilter = currentFilters.warranty;
-        const mFilter = currentFilters.models;
+        const mFilter = currentFilters.model;
 
         rawData.forEach(city => {
             if (!city.equipamentos) return;
@@ -273,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // FASE 1: Filtrar os equipamentos puros dessa cidade
             const filteredEqs = city.equipamentos.filter(eq => {
                 // Filtro Modelo
-                if (!mFilter.includes(eq.modelo)) return false;
+                if (mFilter !== 'all' && eq.modelo !== mFilter) return false;
 
                 // Filtro Garantia
                 if (wFilter === 'active') {

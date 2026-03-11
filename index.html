@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
     
     <!-- Estilo Customizado -->
-    <link rel="stylesheet" href="style.css?v=15">
+    <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
     <div class="app-container">
@@ -59,16 +59,10 @@
                 </select>
             </div>
             <div class="filter-group">
-                <label><i class="fa-solid fa-box"></i> Modelos:</label>
-                <div class="multi-select-container">
-                    <button type="button" id="btnToggleModels" class="glass-input multi-select-button">
-                        <span id="modelsLabel">Todos os Modelos</span>
-                        <i class="fa-solid fa-chevron-down"></i>
-                    </button>
-                    <div id="modelsDropdown" class="multi-select-dropdown hidden glass">
-                        <!-- O Javascript vai injetar os checkboxes dos modelos aqui -->
-                    </div>
-                </div>
+                <label for="filterModels"><i class="fa-solid fa-box"></i> Modelos:</label>
+                <select id="filterModels" class="glass-input">
+                    <!-- O Javascript vai injetar as tags <option> dos modelos aqui -->
+                </select>
             </div>
         </div>
 
@@ -95,6 +89,6 @@
     <!-- Scripts do Leaflet e App -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=16"></script>
 </body>
 </html>

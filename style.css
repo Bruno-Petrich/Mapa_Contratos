@@ -238,85 +238,6 @@ body {
     color: var(--text-main);
 }
 
-/* Multi-select styling */
-.multi-select-container {
-    position: relative;
-    user-select: none;
-}
-
-.multi-select-button {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 200px;
-    text-align: left;
-}
-
-.multi-select-dropdown {
-    position: absolute;
-    top: calc(100% + 5px);
-    left: 0;
-    width: 100%;
-    max-height: 250px;
-    overflow-y: auto;
-    border-radius: 8px;
-    padding: 8px 0;
-    z-index: 1000;
-}
-
-.multi-select-dropdown.hidden {
-    display: none;
-}
-
-.dropdown-actions {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 16px;
-    border-bottom: 1px solid var(--glass-border);
-    margin-bottom: 4px;
-}
-
-.btn-filter-action {
-    background: transparent;
-    border: none;
-    color: var(--primary-color);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 0.2s;
-    font-family: 'Inter', sans-serif;
-}
-
-.btn-filter-action:hover {
-    color: #60a5fa;
-    text-decoration: underline;
-}
-
-.checkbox-item {
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.checkbox-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.checkbox-item input[type="checkbox"] {
-    accent-color: var(--primary-color);
-    cursor: pointer;
-}
-
-.checkbox-item label {
-    cursor: pointer;
-    font-weight: 400;
-    color: var(--text-main);
-    flex: 1;
-}
-
 /* Badge Numérico Dinâmico - Cidades */
 .city-total-marker {
     background: #000000; /* Interior preto */
@@ -786,21 +707,27 @@ body {
         padding: 6px 10px;
     }
 
-    /* Filters Stacked */
+    /* Filters Stacked on Mobile, but side-by-side */
     .filters-bar {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
         padding: 12px 16px;
-        gap: 16px;
+        gap: 12px;
+        overflow-x: auto; /* Permite scroll se for um smartphone muito estreito */
     }
 
     .filter-group {
+        flex: 1;
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
+        min-width: 0; /* Previne overlay */
     }
 
-    .glass-input, .multi-select-button {
+    .glass-input {
         width: 100%;
+        min-width: 0; /* Permite encolher em telas pequenas */
+        padding: 8px 10px;
     }
 
     /* Back to National Button */
