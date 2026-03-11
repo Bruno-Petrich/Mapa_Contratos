@@ -643,17 +643,118 @@ body {
 }
 
 @media (max-width: 768px) {
-    .header-stats {
-        display: none;
-    }
+    /* Header Adjustments */
     .topbar {
-        padding: 0 16px;
+        padding: 8px 16px;
+        height: auto;
+        min-height: var(--header-height);
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
     }
+
+    .header-left {
+        width: 100%;
+        gap: 12px;
+    }
+
+    .btn-back .btn-text {
+        display: none; /* Icon only */
+    }
+
     .page-title {
         font-size: 1.1rem;
     }
+
+    .page-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .header-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .stat-badge {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+
+    /* Filters Stacked */
+    .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px 16px;
+        gap: 16px;
+    }
+
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .glass-input, .multi-select-button {
+        width: 100%;
+    }
+
+    /* Back to National Button */
+    .btn-back-brasil {
+        top: auto;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        justify-content: center;
+    }
+    
+    .btn-back-brasil:hover {
+        transform: translateX(-50%) scale(1.02);
+    }
+    
+    .btn-back-brasil.hidden {
+        transform: translateX(-50%) translateY(100px);
+    }
+
+    /* Info Panel to Bottom Sheet */
     .info-panel {
         width: 100%;
+        height: 65vh; /* Takes roughly 2/3 of the screen */
+        top: auto;
+        bottom: 0;
         border-right: none;
+        border-top: 1px solid var(--glass-border);
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%);
+        flex-direction: column;
+    }
+
+    .info-panel.hidden {
+        transform: translateY(100%);
+    }
+
+    /* Add a small drag handle indicator for UX */
+    .info-panel::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+    }
+
+    .btn-close-panel {
+        top: 20px;
+        right: 20px;
+    }
+
+    /* Leaflet Controls avoid bottom sheet and topbar */
+    .leaflet-control-zoom {
+        margin-top: 20px !important;
+        margin-left: 10px !important;
     }
 }
