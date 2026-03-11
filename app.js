@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Estado dos Filtros Globais
     let currentFilters = {
         warranty: 'all', // 'all', 'active', 'expired'
-        model: 'all'     // 'all' ou string do modelo especifico
+        models: []       // Array de strings dos modelos selecionados
     };
 
     const btnBackBrasil = document.getElementById('btnBackBrasil');
@@ -80,17 +80,145 @@ document.addEventListener('DOMContentLoaded', () => {
         infoPanel.classList.add('hidden');
     });
 
-    // Elementos de Filtro
+    // Elementos de Filtro e Autenticação
     const filterWarranty = document.getElementById('filterWarranty');
-    const filterModels = document.getElementById('filterModels');
+    const btnAdminHistory = document.getElementById('btnAdminHistory');
+    const btnLogout = document.getElementById('btnLogout');
+    const loginOverlay = document.getElementById('loginOverlay');
+    const loginUsername = document.getElementById('loginUsername');
+    const loginPassword = document.getElementById('loginPassword');
+    const btnLoginSubmit = document.getElementById('btnLoginSubmit');
+    const loginError = document.getElementById('loginError');
+    const adminModal = document.getElementById('adminModal');
+    const btnCloseAdmin = document.getElementById('btnCloseAdmin');
+    const historyTableBody = document.getElementById('historyTableBody');
+
+    let currentUser = null;
+
+    function checkAuth() {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            currentUser = storedUser;
+            loginOverlay.classList.add('hidden');
+            btnLogout.classList.remove('hidden');
+            if (currentUser === 'admin') {
+                btnAdminHistory.classList.remove('hidden');
+            } else {
+                btnAdminHistory.classList.add('hidden');
+            }
+        } else {
+            loginOverlay.classList.remove('hidden');
+            btnLogout.classList.add('hidden');
+            btnAdminHistory.classList.add('hidden');
+        }
+    }
+
+    function recordHistory(user, action) {
+        let history = JSON.parse(localStorage.getItem('userHistory') || '[]');
+        history.unshift({
+            user: user,
+            action: action,
+            date: new Date().toLocaleString('pt-BR')
+        });
+        if(history.length > 200) history = history.slice(0, 200);
+        localStorage.setItem('userHistory', JSON.stringify(history));
+    }
+
+    btnLoginSubmit.addEventListener('click', () => {
+        const u = loginUsername.value.trim();
+        const p = loginPassword.value.trim();
+
+        // Senhas fixas pro exemplo
+        if ((u === 'admin' && p === 'admin') || (u === 'user' && p === 'user')) {
+            localStorage.setItem('currentUser', u);
+            recordHistory(u, 'LOGIN');
+            loginError.classList.add('hidden');
+            loginUsername.value = '';
+            loginPassword.value = '';
+            checkAuth();
+        } else {
+            loginError.classList.remove('hidden');
+        }
+    });
+
+    btnLogout.addEventListener('click', () => {
+        if(currentUser) {
+            recordHistory(currentUser, 'LOGOUT');
+        }
+        localStorage.removeItem('currentUser');
+        currentUser = null;
+        checkAuth();
+    });
+
+    btnAdminHistory.addEventListener('click', () => {
+        const history = JSON.parse(localStorage.getItem('userHistory') || '[]');
+        historyTableBody.innerHTML = history.map(h => `
+            <tr>
+                <td><strong>${h.user}</strong></td>
+                <td><span class="${h.action === 'LOGIN' ? 'tag-login' : 'tag-logout'}">${h.action}</span></td>
+                <td>${h.date}</td>
+            </tr>
+        `).join('');
+        adminModal.classList.remove('hidden');
+    });
+
+    btnCloseAdmin.addEventListener('click', () => {
+        adminModal.classList.add('hidden');
+    });
+
+    // Filtro Dropdown Multiplo
+    const multiSelectModels = document.getElementById('multiSelectModels');
+    const dropdownHeader = document.getElementById('dropdownHeader');
+    const dropdownListContainer = document.getElementById('dropdownListContainer');
+    const btnSelectAllModels = document.getElementById('btnSelectAllModels');
+    const btnClearAllModels = document.getElementById('btnClearAllModels');
+    const filterModelsList = document.getElementById('filterModelsList');
+
+    dropdownHeader.addEventListener('click', (e) => {
+        dropdownListContainer.classList.toggle('hidden');
+        e.stopPropagation();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (multiSelectModels && !multiSelectModels.contains(e.target)) {
+            dropdownListContainer.classList.add('hidden');
+        }
+    });
+
+    btnSelectAllModels.addEventListener('click', () => {
+        const checkboxes = filterModelsList.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        updateModelFilters();
+    });
+
+    btnClearAllModels.addEventListener('click', () => {
+        const checkboxes = filterModelsList.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        updateModelFilters();
+    });
+
+    function updateModelFilters() {
+        // Obter apenas as marcadas
+        const checkboxes = filterModelsList.querySelectorAll('input[type="checkbox"]:checked');
+        currentFilters.models = Array.from(checkboxes).map(cb => cb.value);
+        
+        const totalModels = filterModelsList.querySelectorAll('input[type="checkbox"]').length;
+        if(currentFilters.models.length === 0) {
+            dropdownHeader.innerHTML = 'Nenhum Modelo <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>';
+        } else if (currentFilters.models.length === totalModels) {
+            dropdownHeader.innerHTML = 'Todos os Modelos <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>';
+        } else {
+            dropdownHeader.innerHTML = `${currentFilters.models.length} selecionados <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>`;
+        }
+        
+        applyFilters();
+    }
+
+    // Inicialização da Autenticação
+    checkAuth();
 
     filterWarranty.addEventListener('change', (e) => {
         currentFilters.warranty = e.target.value;
-        applyFilters();
-    });
-
-    filterModels.addEventListener('change', (e) => {
-        currentFilters.model = e.target.value;
         applyFilters();
     });
 
@@ -169,15 +297,22 @@ document.addEventListener('DOMContentLoaded', () => {
        Motor de Filtros e UI
     ---------------------------------------------------- */
     function populateModelsDropdown(models) {
-        filterModels.innerHTML = '<option value="all">Todos os Modelos</option>';
-        currentFilters.model = 'all';
+        filterModelsList.innerHTML = '';
+        currentFilters.models = [...models];
 
         models.forEach(mod => {
-            const option = document.createElement('option');
-            option.value = mod;
-            option.textContent = mod;
-            filterModels.appendChild(option);
+            const label = document.createElement('label');
+            label.className = 'dropdown-item';
+            label.innerHTML = `
+                <input type="checkbox" value="${mod}" checked>
+                <span>${mod}</span>
+            `;
+            
+            label.querySelector('input').addEventListener('change', updateModelFilters);
+            filterModelsList.appendChild(label);
         });
+        
+        updateModelFilters(); // update UI inicial e arrays
     }
 
     // Helper: Validar Garantia
@@ -197,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let locaisValidos = new Set();
 
         const wFilter = currentFilters.warranty;
-        const mFilter = currentFilters.model;
+        const selectedModels = currentFilters.models;
 
         rawData.forEach(city => {
             if (!city.equipamentos) return;
@@ -205,7 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // FASE 1: Filtrar os equipamentos puros dessa cidade
             const filteredEqs = city.equipamentos.filter(eq => {
                 // Filtro Modelo
-                if (mFilter !== 'all' && eq.modelo !== mFilter) return false;
+                if (selectedModels.length === 0) return false;
+                if (!selectedModels.includes(eq.modelo)) return false;
 
                 // Filtro Garantia
                 if (wFilter === 'active') {

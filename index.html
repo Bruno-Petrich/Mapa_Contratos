@@ -37,6 +37,12 @@
                 <button id="btnThemeToggle" class="btn-theme-toggle" title="Alternar Tema Claro/Escuro">
                     <i class="fa-solid fa-sun"></i>
                 </button>
+                <button id="btnAdminHistory" class="btn-theme-toggle hidden" title="Histórico de Acessos" style="margin-left: 8px;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+                <button id="btnLogout" class="btn-theme-toggle hidden" title="Sair" style="margin-left: 8px;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
                 <div class="stat-badge">
                     <i class="fa-solid fa-location-dot"></i>
                     <span id="locaisCount">--</span> locais
@@ -59,10 +65,19 @@
                 </select>
             </div>
             <div class="filter-group">
-                <label for="filterModels"><i class="fa-solid fa-box"></i> Modelos:</label>
-                <select id="filterModels" class="glass-input">
-                    <!-- O Javascript vai injetar as tags <option> dos modelos aqui -->
-                </select>
+                <label><i class="fa-solid fa-box"></i> Modelos:</label>
+                <div class="custom-dropdown glass-input" id="multiSelectModels">
+                    <div class="dropdown-header" id="dropdownHeader">Todos os Modelos <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i></div>
+                    <div class="dropdown-list-container hidden" id="dropdownListContainer">
+                        <div class="dropdown-actions">
+                            <button id="btnSelectAllModels" class="btn-dropdown-action">Selecionar Todos</button>
+                            <button id="btnClearAllModels" class="btn-dropdown-action">Limpar</button>
+                        </div>
+                        <div class="dropdown-list" id="filterModelsList">
+                            <!-- Checkboxes injetados pelo JS -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -84,6 +99,42 @@
                 </div>
             </aside>
         </main>
+    </div>
+
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-modal glass">
+            <h2><i class="fa-solid fa-user-lock"></i> Acesso Restrito</h2>
+            <p>Faça login para acessar o Mapa de Contratos.</p>
+            <div class="login-form">
+                <input type="text" id="loginUsername" placeholder="Nome de usuário" class="glass-input login-input">
+                <input type="password" id="loginPassword" placeholder="Senha" class="glass-input login-input">
+                <button id="btnLoginSubmit" class="btn-primary">Entrar</button>
+                <div id="loginError" class="login-error hidden">Usuário ou senha incorretos.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin History Modal -->
+    <div id="adminModal" class="admin-modal hidden">
+        <div class="admin-modal-content glass">
+            <button id="btnCloseAdmin" class="btn-close-panel"><i class="fa-solid fa-xmark"></i></button>
+            <h2><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Acessos</h2>
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Data/Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- Linhas injetadas via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts do Leaflet e App -->
