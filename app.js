@@ -141,6 +141,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Permitir login pressionando Enter no campo de senha
+    loginPassword.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btnLoginSubmit.click();
+        }
+    });
+
     btnLogout.addEventListener('click', () => {
         if(currentUser) {
             recordHistory(currentUser, 'LOGOUT');
@@ -240,16 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Função principal
     async function initApp() {
         try {
-            // Carregar Dados e GeoJSON dos Estados em paralelo
-            const [dataRes, geoRes] = await Promise.all([
-                fetch('dados.json'),
-                fetch('brazil_states.geojson')
-            ]);
+            // Carregar Dados e GeoJSON das variáveis globais carregadas no index.html
+            rawData = localDados;
+            const geojson = localBrazilGeoJSON;
 
-            if (!dataRes.ok || !geoRes.ok) throw new Error('Falha ao carregar arquivos JSON.');
-
-            rawData = await dataRes.json();
-            const geojson = await geoRes.json();
+            if (!rawData || !geojson) throw new Error('Falha ao carregar dados locais (arquivos JS não carregados).');
 
             // Extrair modelos únicos globais para montar o select nativo
             const allModels = new Set();
@@ -312,7 +315,12 @@ document.addEventListener('DOMContentLoaded', () => {
             filterModelsList.appendChild(label);
         });
         
-        updateModelFilters(); // update UI inicial e arrays
+        // As models count determines filter logic, currentFilters.models is pre-filled above
+        // but we DO NOT call updateModelFilters() here anymore to prevent triggering
+        // applyFilters() before stateLayer is created in initApp().
+        
+        const totalModels = models.length;
+        dropdownHeader.innerHTML = 'Todos os Modelos <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>';
     }
 
     // Helper: Validar Garantia

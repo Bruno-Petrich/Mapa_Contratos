@@ -88,6 +88,11 @@ def generate_json(df):
     with open('dados.json', 'w', encoding='utf-8') as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
         
+    with open('dados.js', 'w', encoding='utf-8') as f:
+        f.write('const localDados = ')
+        json.dump(output, f, indent=2, ensure_ascii=False)
+        f.write(';')
+        
     print(f"Sucesso: Extraídas com sucesso {len(output)} Cidades Únicas agregadas.")
 
 if __name__ == "__main__":
