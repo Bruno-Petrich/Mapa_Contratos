@@ -80,43 +80,118 @@ document.addEventListener('DOMContentLoaded', () => {
         infoPanel.classList.add('hidden');
     });
 
-    // Elementos de Filtro e Autenticação
+    // Elementos de Autenticação e Configurações
     const filterWarranty = document.getElementById('filterWarranty');
-    const btnAdminHistory = document.getElementById('btnAdminHistory');
-    const btnLogout = document.getElementById('btnLogout');
+    
+    // Header Buttons
+    const btnSettings = document.getElementById('btnSettings');
+    const btnLogoutUser = document.getElementById('btnLogoutUser');
+    
+    // Login Modal
     const loginOverlay = document.getElementById('loginOverlay');
     const loginUsername = document.getElementById('loginUsername');
     const loginPassword = document.getElementById('loginPassword');
     const btnLoginSubmit = document.getElementById('btnLoginSubmit');
     const loginError = document.getElementById('loginError');
+    
+    // Settings & Admin Modal
+    const settingsModal = document.getElementById('settingsModal');
+    const btnCloseSettings = document.getElementById('btnCloseSettings');
+    const btnAdminHistory = document.getElementById('btnAdminHistory');
+    const btnLogoutAdmin = document.getElementById('btnLogoutAdmin');
     const adminModal = document.getElementById('adminModal');
     const btnCloseAdmin = document.getElementById('btnCloseAdmin');
     const historyTableBody = document.getElementById('historyTableBody');
+    
+    // Registration
+    const regUsername = document.getElementById('regUsername');
+    const regPassword = document.getElementById('regPassword');
+    const regRole = document.getElementById('regRole');
+    const btnRegisterUser = document.getElementById('btnRegisterUser');
+    const regMessage = document.getElementById('regMessage');
 
     let currentUser = null;
+
+    // Inicializar Usuários no LocalStorage e garantir que Admin exista
+    function initUsers() {
+        let usersList = [];
+        try {
+            usersList = JSON.parse(localStorage.getItem('usersList') || '[]');
+            if (!Array.isArray(usersList)) usersList = [];
+        } catch(e) {
+            usersList = [];
+        }
+
+        // Remove admins/users quebrados de versões antigas (que não tinham senha)
+        usersList = usersList.filter(u => {
+            if ((u.user.toLowerCase() === 'admin' || u.user.toLowerCase() === 'user') && !u.pass) return false;
+            return true;
+        });
+
+        // Garante que a conta master Admin sempre exista e funcione
+        const hasAdmin = usersList.some(u => u.user.toLowerCase() === 'admin');
+        if (!hasAdmin) {
+            usersList.unshift({ user: 'admin', pass: 'admin', role: 'admin' });
+        }
+        
+        // Garante conta User padrão
+        const hasUser = usersList.some(u => u.user.toLowerCase() === 'user');
+        if (!hasUser) {
+            usersList.unshift({ user: 'user', pass: 'user', role: 'user' });
+        }
+
+        localStorage.setItem('usersList', JSON.stringify(usersList));
+    }
+    initUsers();
 
     function checkAuth() {
         const storedUser = localStorage.getItem('currentUser');
         if (storedUser) {
-            currentUser = storedUser;
+            try {
+                currentUser = JSON.parse(storedUser);
+            } catch(e) {
+                // Se der erro no parse (usuário antigo usava string simples 'admin' em vez de JSON)
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+            }
+        }
+
+        const greeting = document.getElementById('userGreeting');
+        const greetingName = document.getElementById('greetingName');
+
+        if (currentUser) {
             loginOverlay.classList.add('hidden');
-            btnLogout.classList.remove('hidden');
-            if (currentUser === 'admin') {
-                btnAdminHistory.classList.remove('hidden');
+            
+            // Popula o campo de "Olá, Nome"
+            if (greeting && greetingName) {
+                greeting.classList.remove('hidden');
+                greetingName.textContent = currentUser.user;
+            }
+            
+            if (currentUser.role === 'admin') {
+                btnSettings.classList.remove('hidden');
+                btnSettings.style.display = ''; // Volta ao padrão do CSS
+                btnLogoutUser.classList.add('hidden');
+                btnLogoutUser.style.display = 'none'; // Garante ocultação
             } else {
-                btnAdminHistory.classList.add('hidden');
+                btnSettings.classList.add('hidden');
+                btnSettings.style.display = 'none'; // Garante ocultação
+                settingsModal.classList.add('hidden'); // Segurança extra: fecha se tiver aberto
+                btnLogoutUser.classList.remove('hidden');
+                btnLogoutUser.style.display = ''; // Volta ao padrão do CSS
             }
         } else {
             loginOverlay.classList.remove('hidden');
-            btnLogout.classList.add('hidden');
-            btnAdminHistory.classList.add('hidden');
+            btnSettings.classList.add('hidden');
+            btnLogoutUser.classList.add('hidden');
+            if (greeting) greeting.classList.add('hidden');
         }
     }
 
-    function recordHistory(user, action) {
+    function recordHistory(userObj, action) {
         let history = JSON.parse(localStorage.getItem('userHistory') || '[]');
         history.unshift({
-            user: user,
+            user: userObj.user,
             action: action,
             date: new Date().toLocaleString('pt-BR')
         });
@@ -125,17 +200,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnLoginSubmit.addEventListener('click', () => {
-        const u = loginUsername.value.trim();
+        const u = loginUsername.value.trim().toLowerCase();
         const p = loginPassword.value.trim();
 
-        // Senhas fixas pro exemplo
-        if ((u === 'admin' && p === 'admin') || (u === 'user' && p === 'user')) {
-            localStorage.setItem('currentUser', u);
-            recordHistory(u, 'LOGIN');
+        const usersList = JSON.parse(localStorage.getItem('usersList') || '[]');
+        const userMatch = usersList.find(usr => usr.user.toLowerCase() === u && usr.pass === p);
+
+        if (userMatch) {
+            localStorage.setItem('currentUser', JSON.stringify(userMatch));
+            recordHistory(userMatch, 'LOGIN');
             loginError.classList.add('hidden');
             loginUsername.value = '';
             loginPassword.value = '';
             checkAuth();
+            resetInactivityTimer(); // Inicia o contador de inatividade logo após logar
         } else {
             loginError.classList.remove('hidden');
         }
@@ -149,15 +227,200 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    btnLogout.addEventListener('click', () => {
+    function handleLogout() {
         if(currentUser) {
             recordHistory(currentUser, 'LOGOUT');
         }
         localStorage.removeItem('currentUser');
         currentUser = null;
+        settingsModal.classList.add('hidden');
         checkAuth();
+    }
+
+    btnLogoutUser.addEventListener('click', handleLogout);
+    btnLogoutAdmin.addEventListener('click', handleLogout);
+
+    // Sistema de Logout Automático (2 horas de inatividade)
+    let inactivityTimer;
+    const INACTIVITY_LIMIT_MS = 2 * 60 * 60 * 1000; // 2 horas em milissegundos
+
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        // Só inicia o timer se houver alguém logado
+        if (currentUser) {
+            inactivityTimer = setTimeout(() => {
+                alert('Sua sessão expirou por inatividade (2 horas).');
+                handleLogout();
+            }, INACTIVITY_LIMIT_MS);
+        }
+    }
+
+    // Monitoramento global de atividade
+    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer, { passive: true });
     });
 
+    // Toggle de Visibilidade de Senha
+    const togglePwdBtns = document.querySelectorAll('.btn-toggle-pwd');
+    togglePwdBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            if (targetInput.type === 'password') {
+                targetInput.type = 'text';
+                btn.classList.remove('fa-eye');
+                btn.classList.add('fa-eye-slash');
+            } else {
+                targetInput.type = 'password';
+                btn.classList.remove('fa-eye-slash');
+                btn.classList.add('fa-eye');
+            }
+        });
+    });
+
+    function showRegMessage(msg, isError = false) {
+        if (!msg) {
+            regMessage.classList.add('hidden');
+            return;
+        }
+        regMessage.textContent = msg;
+        if (isError) {
+            regMessage.style.color = '#ef4444';
+            regMessage.style.background = 'rgba(239, 68, 68, 0.1)';
+            regMessage.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        } else {
+            regMessage.style.color = '#34d399';
+            regMessage.style.background = 'rgba(16, 185, 129, 0.1)';
+            regMessage.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        }
+        regMessage.classList.remove('hidden');
+    }
+
+    // Auto-validação de senhas
+    const pConfInput = document.getElementById('regPasswordConfirm');
+    function validatePasswordsRealTime() {
+        const p1 = regPassword.value.trim();
+        const p2 = pConfInput.value.trim();
+        
+        if (p1 && p2 && p1 !== p2) {
+            showRegMessage('Atenção: as senhas digitadas não coincidem.', true);
+            btnRegisterUser.disabled = true;
+            btnRegisterUser.style.opacity = '0.5';
+            btnRegisterUser.style.cursor = 'not-allowed';
+        } else if (p1 && p2 && p1 === p2) {
+            showRegMessage('Senhas conferem! Pode realizar o cadastro.', false);
+            btnRegisterUser.disabled = false;
+            btnRegisterUser.style.opacity = '1';
+            btnRegisterUser.style.cursor = 'pointer';
+        } else {
+            showRegMessage('', false); // Oculta a mensagem no momento que arrumar
+            btnRegisterUser.disabled = false;
+            btnRegisterUser.style.opacity = '1';
+            btnRegisterUser.style.cursor = 'pointer';
+        }
+    }
+    regPassword.addEventListener('input', validatePasswordsRealTime);
+    pConfInput.addEventListener('input', validatePasswordsRealTime);
+
+    // Configurações UI
+    btnSettings.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+        showRegMessage('', false); // Garante que a barra suma completamente ao abrir
+        renderUsersList();
+    });
+
+    btnCloseSettings.addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+    });
+
+    btnRegisterUser.addEventListener('click', () => {
+        const u = regUsername.value.trim();
+        const p = regPassword.value.trim();
+        const pConf = document.getElementById('regPasswordConfirm').value.trim();
+        const r = regRole.value;
+        
+        if (!u || !p || !pConf) {
+            showRegMessage('Preencha todos os campos.', true);
+            return;
+        }
+
+        if (p !== pConf) {
+            showRegMessage('As senhas não conferem.', true);
+            return;
+        }
+        
+        const usersList = JSON.parse(localStorage.getItem('usersList') || '[]');
+        if (usersList.find(usr => usr.user === u)) {
+            showRegMessage('Erro: Nome de usuário já existe.', true);
+            return;
+        }
+
+        usersList.push({ user: u, pass: p, role: r });
+        localStorage.setItem('usersList', JSON.stringify(usersList));
+        
+        showRegMessage('Usuário cadastrado com sucesso!', false);
+        
+        regUsername.value = '';
+        regPassword.value = '';
+        document.getElementById('regPasswordConfirm').value = '';
+        renderUsersList(); // Atualiza a tabela na hora
+    });
+
+    // Função global para ações de usuário exposta pro HTML gerado dinamicamente
+    window.deleteUser = function(username) {
+        if (!currentUser) return;
+        if (username === currentUser.user) {
+            alert('Você não pode excluir a si mesmo enquanto estiver logado.');
+            return;
+        }
+        if (confirm(`Tem certeza que deseja excluir o usuário '${username}'?`)) {
+            let usersList = JSON.parse(localStorage.getItem('usersList') || '[]');
+            usersList = usersList.filter(u => u.user !== username);
+            localStorage.setItem('usersList', JSON.stringify(usersList));
+            renderUsersList();
+        }
+    };
+
+    window.changeUserPassword = function(username) {
+        const newPass = prompt(`Digite a nova senha para '${username}':`);
+        if (newPass && newPass.trim() !== '') {
+            let usersList = JSON.parse(localStorage.getItem('usersList') || '[]');
+            const userIndex = usersList.findIndex(u => u.user === username);
+            if (userIndex !== -1) {
+                usersList[userIndex].pass = newPass.trim();
+                localStorage.setItem('usersList', JSON.stringify(usersList));
+                alert(`Senha do usuário '${username}' alterada com sucesso.`);
+            }
+        }
+    };
+
+    function renderUsersList() {
+        const tbody = document.getElementById('userListTableBody');
+        const usersList = JSON.parse(localStorage.getItem('usersList') || '[]');
+        
+        tbody.innerHTML = usersList.map(usr => `
+            <tr>
+                <td><strong>${usr.user}</strong></td>
+                <td><span class="tag-${usr.role === 'admin' ? 'login' : 'logout'}" style="background: rgba(100,100,100,0.2); color: var(--text-main); font-weight: normal;">${usr.role === 'admin' ? 'Admin' : 'Usuário'}</span></td>
+                <td style="text-align: right;">
+                    <button class="btn-action-icon" title="Alterar Senha" onclick="changeUserPassword('${usr.user}')">
+                        <i class="fa-solid fa-key"></i>
+                    </button>
+                    ${usr.user !== (currentUser ? currentUser.user : '') ? `
+                    <button class="btn-action-icon delete" title="Excluir Usuário" onclick="deleteUser('${usr.user}')">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                    ` : `
+                    <button class="btn-action-icon delete" title="Excluir Usuário" style="opacity:0.3; cursor:not-allowed;" disabled>
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                    `}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Admin History
     btnAdminHistory.addEventListener('click', () => {
         const history = JSON.parse(localStorage.getItem('userHistory') || '[]');
         historyTableBody.innerHTML = history.map(h => `
@@ -174,51 +437,59 @@ document.addEventListener('DOMContentLoaded', () => {
         adminModal.classList.add('hidden');
     });
 
-    // Filtro Dropdown Multiplo
-    const multiSelectModels = document.getElementById('multiSelectModels');
-    const dropdownHeader = document.getElementById('dropdownHeader');
-    const dropdownListContainer = document.getElementById('dropdownListContainer');
+    // Filtro Modelos Modal
+    const btnOpenModelsModal = document.getElementById('btnOpenModelsModal');
+    const btnOpenModelsModalText = document.getElementById('btnOpenModelsModalText');
+    const modelsModal = document.getElementById('modelsModal');
+    const btnCloseModelsModal = document.getElementById('btnCloseModelsModal');
+    
     const btnSelectAllModels = document.getElementById('btnSelectAllModels');
     const btnClearAllModels = document.getElementById('btnClearAllModels');
     const filterModelsList = document.getElementById('filterModelsList');
 
-    dropdownHeader.addEventListener('click', (e) => {
-        dropdownListContainer.classList.toggle('hidden');
-        e.stopPropagation();
+    btnOpenModelsModal.addEventListener('click', () => {
+        modelsModal.classList.remove('hidden');
     });
 
-    document.addEventListener('click', (e) => {
-        if (multiSelectModels && !multiSelectModels.contains(e.target)) {
-            dropdownListContainer.classList.add('hidden');
-        }
+    btnCloseModelsModal.addEventListener('click', () => {
+        modelsModal.classList.add('hidden');
+        // Ao confirmar e fechar, o mapa de fato atualiza (melhor performance para mobile)
+        updateModelFilters();
     });
 
     btnSelectAllModels.addEventListener('click', () => {
         const checkboxes = filterModelsList.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(cb => cb.checked = true);
-        updateModelFilters();
+        updateModelFiltersText(); // apena atualiza o texto visual
     });
 
     btnClearAllModels.addEventListener('click', () => {
         const checkboxes = filterModelsList.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(cb => cb.checked = false);
-        updateModelFilters();
+        updateModelFiltersText(); // apenas atualiza o texto visual
     });
 
-    function updateModelFilters() {
+    function updateModelFiltersText() {
         // Obter apenas as marcadas
         const checkboxes = filterModelsList.querySelectorAll('input[type="checkbox"]:checked');
-        currentFilters.models = Array.from(checkboxes).map(cb => cb.value);
-        
+        const count = checkboxes.length;
         const totalModels = filterModelsList.querySelectorAll('input[type="checkbox"]').length;
-        if(currentFilters.models.length === 0) {
-            dropdownHeader.innerHTML = 'Nenhum Modelo <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>';
-        } else if (currentFilters.models.length === totalModels) {
-            dropdownHeader.innerHTML = 'Todos os Modelos <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>';
-        } else {
-            dropdownHeader.innerHTML = `${currentFilters.models.length} selecionados <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>`;
-        }
         
+        if (count === 0) {
+            btnOpenModelsModalText.innerHTML = 'Nenhum Modelo';
+        } else if (count === totalModels) {
+            btnOpenModelsModalText.innerHTML = 'Todos os Modelos';
+        } else {
+            btnOpenModelsModalText.innerHTML = `${count} selecionados`;
+        }
+    }
+
+    function updateModelFilters() {
+        const checkboxes = filterModelsList.querySelectorAll('input[type="checkbox"]:checked');
+        currentFilters.models = Array.from(checkboxes).map(cb => cb.value);
+        updateModelFiltersText();
+        
+        // Aplica e desenha no mapa apenas quando o modal for fechado (Confirmado) ou atualizado via código global
         applyFilters();
     }
 
@@ -308,19 +579,16 @@ document.addEventListener('DOMContentLoaded', () => {
             label.className = 'dropdown-item';
             label.innerHTML = `
                 <input type="checkbox" value="${mod}" checked>
-                <span>${mod}</span>
+                <span style="flex:1;">${mod}</span>
             `;
             
-            label.querySelector('input').addEventListener('change', updateModelFilters);
+            // Update apenas do texto ao marcar, o mapa só atualiza ao Confirmar
+            label.querySelector('input').addEventListener('change', updateModelFiltersText);
             filterModelsList.appendChild(label);
         });
         
-        // As models count determines filter logic, currentFilters.models is pre-filled above
-        // but we DO NOT call updateModelFilters() here anymore to prevent triggering
-        // applyFilters() before stateLayer is created in initApp().
-        
         const totalModels = models.length;
-        dropdownHeader.innerHTML = 'Todos os Modelos <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>';
+        btnOpenModelsModalText.innerHTML = 'Todos os Modelos';
     }
 
     // Helper: Validar Garantia

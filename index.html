@@ -33,14 +33,19 @@
                 </div>
             </div>
             
-            <div class="header-stats" id="headerStats">
+            <div class="header-stats" id="headerStats" style="display: flex; align-items: center;">
+                <div id="userGreeting" class="user-greeting hidden" style="color: var(--text-main); font-size: 0.95rem; margin-right: 15px; display: flex; align-items: center; gap: 8px; border-right: 1px solid var(--glass-border); padding-right: 15px;">
+                    <i class="fa-solid fa-circle-user" style="font-size: 1.2rem; color: var(--primary-color);"></i>
+                    <span>Olá, <b id="greetingName">Usuário</b></span>
+                </div>
+                
                 <button id="btnThemeToggle" class="btn-theme-toggle" title="Alternar Tema Claro/Escuro">
                     <i class="fa-solid fa-sun"></i>
                 </button>
-                <button id="btnAdminHistory" class="btn-theme-toggle hidden" title="Histórico de Acessos" style="margin-left: 8px;">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
+                <button id="btnSettings" class="btn-theme-toggle hidden" title="Configurações do Sistema" style="margin-left: 8px;">
+                    <i class="fa-solid fa-gear"></i>
                 </button>
-                <button id="btnLogout" class="btn-theme-toggle hidden" title="Sair" style="margin-left: 8px;">
+                <button id="btnLogoutUser" class="btn-theme-toggle hidden" title="Sair" style="margin-left: 8px;">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
                 <div class="stat-badge">
@@ -66,18 +71,9 @@
             </div>
             <div class="filter-group">
                 <label><i class="fa-solid fa-box"></i> Modelos:</label>
-                <div class="custom-dropdown glass-input" id="multiSelectModels">
-                    <div class="dropdown-header" id="dropdownHeader">Todos os Modelos <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i></div>
-                    <div class="dropdown-list-container hidden" id="dropdownListContainer">
-                        <div class="dropdown-actions">
-                            <button id="btnSelectAllModels" class="btn-dropdown-action">Selecionar Todos</button>
-                            <button id="btnClearAllModels" class="btn-dropdown-action">Limpar</button>
-                        </div>
-                        <div class="dropdown-list" id="filterModelsList">
-                            <!-- Checkboxes injetados pelo JS -->
-                        </div>
-                    </div>
-                </div>
+                <button id="btnOpenModelsModal" class="glass-input filter-btn">
+                    <span id="btnOpenModelsModalText">Todos os Modelos</span> <i class="fa-solid fa-chevron-down" style="float: right; margin-top: 4px;"></i>
+                </button>
             </div>
         </div>
 
@@ -117,7 +113,7 @@
 
     <!-- Admin History Modal -->
     <div id="adminModal" class="admin-modal hidden">
-        <div class="admin-modal-content glass">
+        <div class="admin-modal-content glass" style="max-height: 80vh;">
             <button id="btnCloseAdmin" class="btn-close-panel"><i class="fa-solid fa-xmark"></i></button>
             <h2><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Acessos</h2>
             <div class="table-container">
@@ -133,6 +129,93 @@
                         <!-- Linhas injetadas via JS -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Models Filter Modal -->
+    <div id="modelsModal" class="admin-modal hidden">
+        <div class="admin-modal-content glass" style="max-width: 400px;">
+            <h2><i class="fa-solid fa-box"></i> Filtrar Modelos</h2>
+            
+            <div class="modal-actions" style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <button id="btnSelectAllModels" class="btn-dropdown-action" style="flex: 1; padding: 10px;">Selecionar Todos</button>
+                <button id="btnClearAllModels" class="btn-dropdown-action" style="flex: 1; padding: 10px;">Limpar</button>
+            </div>
+            
+            <div id="filterModelsList" class="modal-list-container" style="flex: 1; overflow-y: auto; max-height: 50vh; margin-bottom: 20px; border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px;">
+                <!-- Checkboxes injetados pelo JS -->
+            </div>
+            
+            <button id="btnCloseModelsModal" class="btn-primary" style="width: 100%;">Confirmar</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="admin-modal hidden">
+        <div class="admin-modal-content glass" style="max-width: 600px; padding: 25px;">
+            <button id="btnCloseSettings" class="btn-close-panel"><i class="fa-solid fa-xmark"></i></button>
+            <h2 style="margin-bottom: 25px;"><i class="fa-solid fa-gear"></i> Configurações do Sistema</h2>
+            
+            <div class="settings-grid" style="gap: 25px;">
+                <!-- Registration Box -->
+                <div class="settings-box">
+                    <h3><i class="fa-solid fa-user-plus"></i> Cadastrar Novo Usuário</h3>
+                    <div class="login-form" style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        
+                        <div style="grid-column: 1 / -1;">
+                            <input type="text" id="regUsername" placeholder="Nome de usuário" class="glass-input login-input" autocomplete="off">
+                        </div>
+                        
+                        <div class="password-wrapper" style="position: relative;">
+                            <input type="password" id="regPassword" placeholder="Senha" class="glass-input login-input" style="padding-right: 40px;">
+                            <i class="fa-solid fa-eye btn-toggle-pwd" data-target="regPassword"></i>
+                        </div>
+                        
+                        <div class="password-wrapper" style="position: relative;">
+                            <input type="password" id="regPasswordConfirm" placeholder="Confirmar Senha" class="glass-input login-input" style="padding-right: 40px;">
+                            <i class="fa-solid fa-eye btn-toggle-pwd" data-target="regPasswordConfirm"></i>
+                        </div>
+                        
+                        <div style="grid-column: 1 / -1;">
+                            <select id="regRole" class="glass-input login-input">
+                                <option value="user">Usuário Comum (Apenas Mapa)</option>
+                                <option value="admin">Administrador (Total Acesso)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="grid-column: 1 / -1;">
+                            <button id="btnRegisterUser" class="btn-primary" style="width: 100%;">Cadastrar</button>
+                        </div>
+                        
+                        <div id="regMessage" class="login-error hidden" style="grid-column: 1 / -1; margin-top: 0;"></div>
+                    </div>
+                </div>
+
+                <!-- User Management List -->
+                <div class="settings-box">
+                    <h3><i class="fa-solid fa-users"></i> Gerenciar Usuários</h3>
+                    <div class="table-container" style="max-height: 200px; margin-top: 12px;">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Acesso</th>
+                                    <th style="text-align: right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userListTableBody">
+                                <!-- Linhas injetadas via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Admin Action Buttons -->
+                <div class="settings-actions" style="display: flex; gap: 12px; margin-top: 5px;">
+                    <button id="btnAdminHistory" class="btn-dropdown-action" style="flex:1; padding: 12px; font-size: 0.95rem;"><i class="fa-solid fa-clock-rotate-left"></i> Histórico</button>
+                    <button id="btnLogoutAdmin" class="btn-dropdown-action" style="flex:1; padding: 12px; font-size: 0.95rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);"><i class="fa-solid fa-right-from-bracket"></i> Sair do Sistema</button>
+                </div>
             </div>
         </div>
     </div>
