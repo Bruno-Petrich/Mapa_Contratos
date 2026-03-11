@@ -730,11 +730,18 @@ body {
         border-radius: 20px 20px 0 0;
         transform: translateY(0); /* VISIBLE STATE: rests firmly at the bottom */
         flex-direction: column;
+        overflow: hidden; /* Prevents internal flex content from escaping */
     }
 
     .info-panel.hidden {
         transform: translateY(150%); /* HIDDEN STATE: pushed way off screen downwards */
         opacity: 0; /* Backup to ensure invisible */
+    }
+
+    .info-panel-content {
+        height: 100%; /* Force it to respect the 65vh of the parent */
+        overflow-y: auto; /* Enable touch scrolling inside the drawer */
+        padding-bottom: 80px; /* Give room at bottom so last items aren't cut */
     }
 
     /* Add a small drag handle indicator for UX */

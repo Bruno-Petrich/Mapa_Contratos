@@ -584,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 <div class="popup-section">
                     <h4>Locais de Instalação (${arrayLocais.length})</h4>
-                    <ul class="model-list" style="max-height: 33vh; overflow-y: auto; padding-right: 4px;">
+                    <ul class="model-list" style="overflow-y: auto; padding-right: 4px;">
                         ${locaisHtml}
                     </ul>
                 </div>
