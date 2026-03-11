@@ -728,12 +728,13 @@ body {
         border-right: none;
         border-top: 1px solid var(--glass-border);
         border-radius: 20px 20px 0 0;
-        transform: translateY(100%);
+        transform: translateY(0); /* VISIBLE STATE: rests firmly at the bottom */
         flex-direction: column;
     }
 
     .info-panel.hidden {
-        transform: translateY(100%);
+        transform: translateY(150%); /* HIDDEN STATE: pushed way off screen downwards */
+        opacity: 0; /* Backup to ensure invisible */
     }
 
     /* Add a small drag handle indicator for UX */
