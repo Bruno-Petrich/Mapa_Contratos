@@ -1,5 +1,5 @@
 :root {
-    /* Color Palette - Modern Dark Theme with Premium Accents */
+    /* Color Palette - Modern Dark Theme (Default) */
     --bg-color: #0b0f19;
     --glass-bg: rgba(22, 27, 34, 0.7);
     --glass-border: rgba(255, 255, 255, 0.08);
@@ -8,6 +8,8 @@
     --accent-color: #0ea5e9;
     --text-main: #f0f6fc;
     --text-muted: #8b949e;
+    --dropdown-bg: var(--bg-color);
+    --map-grid-color: rgba(255, 255, 255, 0.1);
     
     /* Layout */
     --header-height: 80px;
@@ -20,11 +22,26 @@
     padding: 0;
 }
 
+/* Light Theme Overrides */
+[data-theme="light"] {
+    --bg-color: #f1f5f9;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --primary-color: #2563eb;
+    --primary-glow: rgba(37, 99, 235, 0.4);
+    --accent-color: #0284c7;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --dropdown-bg: #ffffff;
+    --map-grid-color: rgba(0, 0, 0, 0.08);
+}
+
 body {
     font-family: 'Inter', sans-serif;
     color: var(--text-main);
     background-color: var(--bg-color);
     overflow: hidden;
+    transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 /* Glassmorphism Utilities */
@@ -57,6 +74,37 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
+}
+
+/* Theme Toggle Button */
+.btn-theme-toggle {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+}
+
+[data-theme="light"] .btn-theme-toggle {
+    background: rgba(0, 0, 0, 0.05);
+    color: #f59e0b; /* Sun color for light mode */
+}
+
+.btn-theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-main);
+    transform: rotate(15deg);
+}
+
+[data-theme="light"] .btn-theme-toggle:hover {
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .btn-back {
@@ -167,7 +215,7 @@ body {
 
 .glass-input {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
     color: var(--text-main);
     padding: 8px 16px;
     border-radius: 8px;
@@ -186,7 +234,7 @@ body {
 }
 
 .glass-input option {
-    background: var(--bg-color);
+    background: var(--dropdown-bg);
     color: var(--text-main);
 }
 
@@ -224,7 +272,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 8px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--glass-border);
     margin-bottom: 4px;
 }
 
@@ -280,14 +328,24 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 0 10px rgba(14, 165, 233, 0.6);
+    box-shadow: 0 0 10px var(--primary-glow);
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
+}
+
+[data-theme="light"] .city-total-marker {
+    background: #ffffff;
+    border: 2px solid var(--primary-color);
+    color: var(--text-main);
 }
 
 .city-total-marker:hover {
     transform: scale(1.1);
     background: #1a1a1a;
+}
+
+[data-theme="light"] .city-total-marker:hover {
+    background: #f1f5f9;
 }
 
 .city-total-marker .city-count {
@@ -326,10 +384,6 @@ body {
 
 /* Botão Voltar Map */
 .btn-back-brasil {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1000;
     background: rgba(59, 130, 246, 0.85);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -354,9 +408,7 @@ body {
 }
 
 .btn-back-brasil.hidden {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-10px);
+    display: none;
 }
 
 /* Leaflet Overrides */
@@ -433,6 +485,25 @@ body {
     text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
 }
 
+[data-theme="light"] .state-total-marker {
+    background: #ffffff;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="light"] .state-total-marker:hover {
+    background: #f8fafc;
+}
+
+[data-theme="light"] .state-total-marker .state-sigla {
+    color: var(--text-muted);
+}
+
+[data-theme="light"] .state-total-marker .state-count {
+    color: var(--primary-color);
+    text-shadow: none;
+}
+
 /* Cluster de Cidades */
 .custom-cluster-icon {
     background: transparent;
@@ -450,7 +521,7 @@ body {
     justify-content: center; 
     font-weight: bold; 
     font-size: 1rem;
-    border: 2px solid rgba(255,255,255,0.3); 
+    border: 2px solid var(--glass-border); 
     box-shadow: 0 0 15px var(--primary-glow);
     transition: transform 0.2s;
 }
@@ -499,7 +570,7 @@ body {
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0 0 4px 0;
-    color: #fff;
+    color: var(--text-main);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -546,6 +617,10 @@ body {
     border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
+[data-theme="light"] .model-list li {
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
 .model-list li:last-child {
     border-bottom: none;
 }
@@ -581,6 +656,24 @@ body {
     color: #f87171;
 }
 
+[data-theme="light"] .badge-item {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--text-main);
+}
+
+[data-theme="light"] .warranty-badge {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #059669;
+}
+
+[data-theme="light"] .warranty-badge.expired {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+}
+
 /* Animations */
 .leaflet-popup {
     animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -599,15 +692,17 @@ body {
     bottom: 0;
     width: 380px;
     z-index: 1000;
-    background: rgba(11, 15, 25, 0.85);
-    border-right: 1px solid var(--glass-border);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     box-shadow: 5px 0 25px rgba(0,0,0,0.5);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
     transform: translateX(0);
     display: flex;
     flex-direction: column;
+}
+
+[data-theme="light"] .info-panel {
+    background: rgba(255, 255, 255, 0.9);
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 5px 0 25px rgba(0,0,0,0.15);
 }
 
 .info-panel.hidden {
@@ -639,8 +734,16 @@ body {
     z-index: 10;
 }
 
+[data-theme="light"] .btn-close-panel {
+    color: var(--text-muted);
+}
+
 .btn-close-panel:hover {
     color: var(--text-main);
+}
+
+[data-theme="light"] .btn-close-panel:hover {
+    color: #0f172a;
 }
 
 @media (max-width: 768px) {
@@ -702,21 +805,11 @@ body {
 
     /* Back to National Button */
     .btn-back-brasil {
-        top: auto;
-        bottom: 60px; /* Increased from 20px to avoid iOS/Android system bars */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 90%;
-        justify-content: center;
-        z-index: 10000; /* Ensure it stays above everything on bottom */
+        padding: 8px 12px;
     }
     
-    .btn-back-brasil:hover {
-        transform: translateX(-50%) scale(1.02);
-    }
-    
-    .btn-back-brasil.hidden {
-        transform: translateX(-50%) translateY(150px);
+    .btn-back-brasil .btn-text {
+        display: none; /* Icon only */
     }
 
     /* Info Panel to Bottom Sheet */

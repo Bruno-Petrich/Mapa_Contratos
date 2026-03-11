@@ -19,14 +19,14 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
     
     <!-- Estilo Customizado -->
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
     <div class="app-container">
         <!-- Barra superior (Glassmorphism) -->
         <header class="topbar glass">
             <div class="header-left">
-                <a href="../index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> <span class="btn-text">Voltar</span></a>
+                <button id="btnBackBrasil" class="btn-back-brasil hidden"><i class="fa-solid fa-earth-americas"></i> <span class="btn-text">Voltar</span></button>
                 <div class="title-container">
                     <h1 class="page-title">Mapa de Contratos</h1>
                     <p class="page-subtitle">Distribuição e Detalhes dos Equipamentos Instalados</p>
@@ -34,6 +34,9 @@
             </div>
             
             <div class="header-stats" id="headerStats">
+                <button id="btnThemeToggle" class="btn-theme-toggle" title="Alternar Tema Claro/Escuro">
+                    <i class="fa-solid fa-sun"></i>
+                </button>
                 <div class="stat-badge">
                     <i class="fa-solid fa-location-dot"></i>
                     <span id="locaisCount">--</span> locais
@@ -77,7 +80,6 @@
 
         <!-- O Mapa e Paineis Auxiliares -->
         <main class="map-wrapper">
-            <button id="btnBackBrasil" class="btn-back-brasil hidden"><i class="fa-solid fa-earth-americas"></i> <span class="btn-text">Voltar para Visão Nacional</span></button>
             <div id="map"></div>
             
             <!-- Painel Lateral de Detalhes da Cidade -->
@@ -93,6 +95,6 @@
     <!-- Scripts do Leaflet e App -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    <script src="app.js?v=7"></script>
+    <script src="app.js?v=15"></script>
 </body>
 </html>

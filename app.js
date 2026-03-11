@@ -38,6 +38,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const infoPanel = document.getElementById('infoPanel');
     const infoPanelContent = document.getElementById('infoPanelContent');
     const btnClosePanel = document.getElementById('btnClosePanel');
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+
+    // Módulo de Tema Escuro / Claro
+    const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : 'dark';
+    if (currentTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        btnThemeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+    }
+
+    btnThemeToggle.addEventListener('click', () => {
+        const theme = document.documentElement.getAttribute('data-theme');
+        if (theme === 'light') {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'dark');
+            btnThemeToggle.innerHTML = '<i class="fa-solid fa-sun"></i>';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('theme', 'light');
+            btnThemeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+        }
+        
+        // Redesenhar o mapa pra aplicar cores dinâmicas
+        if (stateLayer) {
+            stateLayer.eachLayer(layer => {
+                if (currentActiveState === layer) {
+                    layer.setStyle(getActiveStyle());
+                } else {
+                    layer.setStyle(getFeatureStyle(layer.feature));
+                }
+            });
+        }
+        
+        // Redesenhar cidades se estiver logado em um estado
+        if (currentActiveState && cityGeoLayer) {
+            renderCityGeoJSON(currentActiveState.feature.properties.sigla);
+        }
+    });
 
     btnClosePanel.addEventListener('click', () => {
         infoPanel.classList.add('hidden');
@@ -281,33 +318,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /* ----------------------------------------------------
-       Estilos Geográficos
-    ---------------------------------------------------- */
+    // getFeatureStyle: Como fica o estado normal
     function getFeatureStyle(feature) {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         return {
-            fillColor: '#161b22', // Cor base do estado escuro
+            fillColor: isLight ? '#3b82f6' : '#161b22', // Azul claro com opacidade
             weight: 1.5,
             opacity: 1,
-            color: '#30363d', // Borda do estado
-            fillOpacity: 1
+            color: isLight ? '#60a5fa' : '#30363d', // Borda
+            fillOpacity: isLight ? 0.35 : 1
         };
     }
 
+    // getHighlightStyle: Como fica no Hover
     function getHighlightStyle() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         return {
-            fillColor: '#1f2937',
+            fillColor: isLight ? '#93c5fd' : '#1f2937', // Hover azul intermediário no tema claro
             weight: 2,
-            color: '#3b82f6', // Borda azul brilhante no hover
-            fillOpacity: 1
+            color: isLight ? '#2563eb' : '#3b82f6', 
+            fillOpacity: isLight ? 0.5 : 1
         };
     }
 
     function getActiveStyle() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         return {
-            fillColor: '#0f172a',
+            fillColor: isLight ? '#f8fafc' : '#0f172a', // Fundo claro no estado ativo par destacar as cidades azuis
             weight: 3,
-            color: '#0ea5e9',
+            color: isLight ? '#3b82f6' : '#0ea5e9',
             fillOpacity: 1
         };
     }
@@ -429,23 +468,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 style: function (feature) {
                     const cityName = normalizeString(feature.properties.name);
                     const matchingData = mapDadosCidade[cityName];
+                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
                     // Se essa cidade tiver equipamentos no nosso JSON, destaca o fundo!
                     if (matchingData) {
                         return {
                             fillColor: '#3b82f6', // Glow primary blue
                             fillOpacity: 0.35,     // Destacado mas translúcido para ver as malhas
-                            color: '#60a5fa',    // Borda clara
-                            weight: 1.5,
+                            color: isLight ? '#1d4ed8' : '#93c5fd', // Borda mais clara (#93c5fd) no escuro para saltar aos olhos
+                            weight: isLight ? 2.5 : 2.0, // Aumentando espessura no modo escuro pra destacar bem
                             opacity: 1
                         };
                     } else {
                         // Cidades vazias daquele estado
                         return {
                             fillColor: 'transparent',
-                            color: '#1e293b', // Grade super escura e sutil
-                            weight: 0.8,
-                            opacity: 0.5
+                            color: isLight ? '#94a3b8' : '#334155', // Deixando as linhas do escuro mais claras (#334155 ao invés de #1e293b)
+                            weight: isLight ? 1.2 : 1.0, // Grade vazia levemente mais grossa no modo escuro também
+                            opacity: isLight ? 0.7 : 0.6
                         };
                     }
                 },
@@ -572,14 +612,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
 
         const locaisHtml = arrayLocais.map(l => `
-            <li><i class="fa-solid fa-building" style="color:var(--text-muted); margin-right:4px;"></i> ${l}</li>
+            <li><i class="fa-solid fa-building" style="color:var(--text-muted); margin-right:4px;"></i> <span>${l}</span></li>
         `).join('');
 
         const popupContent = `
             <div class="custom-popup">
                 <h3><i class="fa-solid fa-map-location-dot"></i> ${item.cidade} - ${item.uf}</h3>
-                <p class="city-subtitle" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">
-                    Total de Máquinas Instaladas: <span style="color:#fff; font-weight:bold;">${totalFiltered}</span>
+                <p class="city-subtitle" style="font-size:0.8rem; margin-bottom:8px;">
+                    Total de Máquinas Instaladas: <span style="font-weight:bold; color:var(--text-main);">${totalFiltered}</span>
                 </p>
                 
                 <div class="popup-section">
